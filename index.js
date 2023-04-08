@@ -2,8 +2,8 @@ const inquirer = require('inquirer');
 const fs = require('fs');
 const chalk = require('chalk');
 
-inquirer
-    .prompt([
+
+const questions = [
     // Project Title
     {
         type:'input',
@@ -83,67 +83,46 @@ inquirer
             },
             ],
     }
-    
-])
+];
+inquirer
+    .prompt(questions)
     .then((answers) =>{
         console.log(answers);
-        var projectTitle = answers.title;
-        // iterate through the JSON object to create the README.
-        fs.writeFile('README.md', `# ${projectTitle}`, (err)=>{
+        fs.writeFile('README.md', `# ${answers.title}`, (err)=>{
             err ? console.log(err) : console.log('Success!')
         })
-        var projectDesc = answers.description;
-        fs.appendFile('README.md', `\n## Description\n${projectDesc}\n`, (err)=>{
-            if(err) throw err;
-            console.log('Description appended to file.');
-        });
-        fs.appendFile('README.md',`## Table of Contents:\n1. [Installation Instructions](#installation)
-        \n2. [Usage](#usage)\n3. [Contributing](#contributing)\n4. [Testing Instructions](#testing)
-        \n5. [Questions](#questions)\n6. [Licensing](#license)`,(err)=>{
-            if(err) throw err;
-            console.log('Table of Contents appended to file.');
-        });
-        var installationInstructions = answers.installation;
-        fs.appendFile('README.md',`\n<a name="installation"></a>
-        \n## Installation\n${installationInstructions}`, (err)=>{
-            if(err) throw err;
-            console.log('Installation appended to file');
-        });
-        var usageSection = answers.usage;
-        fs.appendFile('README.md',`\n<a name="usage"></a>
-        \n## Usage\n${usageSection}`, (err)=>{
-            if(err) throw err;
-            console.log('Usage appended to file');
-        });
-        var contributionSection = answers.contribution;
-        fs.appendFile('README.md',`\n<a name="contributing"></a>
-        \n## Contributing\n${contributionSection}`, (err)=>{
-            if(err) throw err;
-            console.log('Contributions appended to file');
-        });
-        var testingInstructions = answers.testing;
-        fs.appendFile('README.md',`\n<a name="testing"></a>
-        \n## Testing\n${testingInstructions}`, (err)=>{
-            if(err) throw err;
-            console.log('Testing appended to file');
-        });
-        var gHUser = answers.questionsGhUser;
-        var gHProfile = answers.questionsGhProfileLink;
-        var email = answers.email;
-        fs.appendFile('README.md',`\n<a name="questions"></a>
-        \n## Questions\nGitHub: ${gHUser}\nGitHub Profile: ${gHProfile}
-        \nEmail: ${email}`, (err)=>{
-            if(err) throw err;
-            console.log('Questions appended to file');
-        });
-        var licenseSection = answers.licenseInfo;
-        fs.appendFile('README.md', `\n<a name="license"></a>
-        \n## License Information\n${licenseSection}`, (err)=>{
-            if(err) throw err;
-            console.log('License Info appended to file');
-        })
+        const promises = [
+            Promise.resolve(`\n## Description\n${answers.description}\n`),
+            Promise.resolve(`## Table of Contents:\n1. [Installation Instructions](#installation)
+            \n2. [Usage](#usage)\n3. [Contributing](#contributing)\n4. [Testing Instructions](#testing)
+            \n5. [Questions](#questions)\n6. [Licensing](#license)`),
+            Promise.resolve(`\n<a name="installation"></a>
+            \n## Installation\n${answers.installation}`),
+            Promise.resolve(`\n<a name="usage"></a>
+            \n## Usage\n${answers.usage}`),
+            Promise.resolve(`\n<a name="contributing"></a>
+            \n## Contributing\n${answers.contributionGuidelines}`),
+            Promise.resolve(`\n<a name="testing"></a>
+            \n## Testing\n${answers.testing}`),
+            Promise.resolve(`\n<a name="questions"></a>
+            \n## Questions\nGitHub: ${answers.questionsGhUser}\nGitHub Profile: ${answers.questionsGhProfileLink}
+            \nEmail: ${answers.email}`),
+            Promise.resolve(`\n<a name="license"></a>
+            \n## License Information\n${answers.licenseInfo}`),
+        ];
 
+        return Promise.all(promises);
     })
-    .catch((error)=>{
-        console.error(error);
-    });
+    .then((contentArray) =>{
+        const content = contentArray.join('');
+        fs.appendFile('README.md', content, (err)=>{
+            if(err){
+                console.error(err);
+            } else {
+                console.log('Content appended successfuly to file!');
+            }
+        })
+    })
+    .catch((err)=>{
+        console.error(err);
+});
